@@ -57,9 +57,32 @@ async def on_ready():
 
 # ── /suggest ─────────────────────────────────────────────────────────────────
 
-@tree.command(name="suggest", description="Add a movie to your suggestion list")
-@app_commands.describe(movie="Name of the movie to suggest")
-async def suggest(interaction: discord.Interaction, movie: str):
+@tree.command(name="suggest", description="Add up to 10 movies to your suggestion list at once")
+@app_commands.describe(
+    movie1="Movie 1",
+    movie2="Movie 2",
+    movie3="Movie 3",
+    movie4="Movie 4",
+    movie5="Movie 5",
+    movie6="Movie 6",
+    movie7="Movie 7",
+    movie8="Movie 8",
+    movie9="Movie 9",
+    movie10="Movie 10",
+)
+async def suggest(
+    interaction: discord.Interaction,
+    movie1: str,
+    movie2: str | None = None,
+    movie3: str | None = None,
+    movie4: str | None = None,
+    movie5: str | None = None,
+    movie6: str | None = None,
+    movie7: str | None = None,
+    movie8: str | None = None,
+    movie9: str | None = None,
+    movie10: str | None = None,
+):
     if not interaction.guild_id:
         await interaction.response.send_message(
             "This command can only be used inside a server.", ephemeral=True
@@ -69,37 +92,40 @@ async def suggest(interaction: discord.Interaction, movie: str):
     guild_id = str(interaction.guild_id)
     user_id = str(interaction.user.id)
     user_name = interaction.user.display_name
-    movie_name = movie.strip()
 
-    if not movie_name:
-        await interaction.response.send_message("Please provide a movie name.", ephemeral=True)
-        return
+    raw = [movie1, movie2, movie3, movie4, movie5, movie6, movie7, movie8, movie9, movie10]
+    movies = [m.strip() for m in raw if m and m.strip()]
+
+    added: list[str] = []
+    dupes: list[str] = []
 
     with get_db() as conn:
-        existing = conn.execute(
-            "SELECT id FROM suggestions WHERE guild_id = ? AND user_id = ? AND LOWER(movie_name) = LOWER(?)",
-            (guild_id, user_id, movie_name),
-        ).fetchone()
-
-        if existing:
-            await interaction.response.send_message(
-                f"**{movie_name}** is already in your suggestions!", ephemeral=True
-            )
-            return
-
-        conn.execute(
-            "INSERT INTO suggestions (guild_id, user_id, user_name, movie_name) VALUES (?, ?, ?, ?)",
-            (guild_id, user_id, user_name, movie_name),
-        )
-        # Keep display name fresh for all of this user's rows
+        for movie_name in movies:
+            existing = conn.execute(
+                "SELECT id FROM suggestions WHERE guild_id = ? AND user_id = ? AND LOWER(movie_name) = LOWER(?)",
+                (guild_id, user_id, movie_name),
+            ).fetchone()
+            if existing:
+                dupes.append(movie_name)
+            else:
+                conn.execute(
+                    "INSERT INTO suggestions (guild_id, user_id, user_name, movie_name) VALUES (?, ?, ?, ?)",
+                    (guild_id, user_id, user_name, movie_name),
+                )
+                added.append(movie_name)
+        # Keep display name fresh
         conn.execute(
             "UPDATE suggestions SET user_name = ? WHERE guild_id = ? AND user_id = ?",
             (user_name, guild_id, user_id),
         )
 
-    await interaction.response.send_message(
-        f"Added **{movie_name}** to your suggestions! 🎬", ephemeral=True
-    )
+    lines: list[str] = []
+    if added:
+        lines.append("Added 🎬\n" + "\n".join(f"• {m}" for m in added))
+    if dupes:
+        lines.append("Already in your list\n" + "\n".join(f"• {m}" for m in dupes))
+
+    await interaction.response.send_message("\n\n".join(lines), ephemeral=True)
 
 
 # ── /suggestions ──────────────────────────────────────────────────────────────
