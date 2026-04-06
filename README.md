@@ -6,9 +6,12 @@ A simple Discord bot for collecting and prioritising movie suggestions, scoped p
 
 | Command | Description |
 |---|---|
-| `/suggest <movie>` | Add a movie to your personal suggestion list |
+| `/suggest <movie>` | Add up to 10 movies at once to your personal suggestion list, up to 25 total per user |
 | `/suggestions` | Show all suggested movies grouped by user. Priority picks are starred. |
 | `/prio` | Open an ephemeral button menu to star one of your movies as your priority pick (click it again to remove) |
+| `/removesuggestion` | Open an ephemeral button menu to remove one of your suggested movies |
+| `/addwatched <movie_title> [date]` | Add a watched movie for the server. Supported date formats: `YYYY-MM-DD`, `YYYY/MM/DD`, `MM/DD/YYYY`, `MM-DD-YYYY` |
+| `/watched` | Show all watched movies for the server |
 
 ## Local Development
 
@@ -38,6 +41,8 @@ python bot.py
 ```
 
 The SQLite database (`suggestions.db`) is created automatically on first run in the directory set by `DATA_DIR` (defaults to `.`).
+
+Each user can keep up to 25 active suggestions per server.
 
 ---
 
