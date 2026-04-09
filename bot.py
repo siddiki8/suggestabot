@@ -442,7 +442,7 @@ async def watched(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 
-# ── /mysuggestions ───────────────────────────────────────────────────────────
+# ── /peeksuggestions ─────────────────────────────────────────────────────────
 
 @tree.command(name="peeksuggestions", description="View all server suggestions privately")
 async def peek_suggestions(interaction: discord.Interaction):

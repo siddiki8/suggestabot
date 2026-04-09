@@ -12,6 +12,7 @@ A simple Discord bot for collecting and prioritising movie suggestions, scoped p
 | `/removesuggestion` | Open an ephemeral button menu to remove one of your suggested movies |
 | `/addwatched <movie_title> [date]` | Add a watched movie for the server. Supported date formats: `YYYY-MM-DD`, `YYYY/MM/DD`, `MM/DD/YYYY`, `MM-DD-YYYY` |
 | `/watched` | Show all watched movies for the server |
+| `/peeksuggestions` | Open an ephemeral view of all server movie suggestions, grouped by user |
 
 ## Local Development
 
