@@ -442,6 +442,59 @@ async def watched(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 
+# ── /mysuggestions ───────────────────────────────────────────────────────────
+
+@tree.command(name="peeksuggestions", description="View all server suggestions privately")
+async def peek_suggestions(interaction: discord.Interaction):
+    if not interaction.guild_id:
+        await interaction.response.send_message(
+            "This command can only be used inside a server.", ephemeral=True
+        )
+        return
+
+    guild_id = str(interaction.guild_id)
+
+    with get_db() as conn:
+        rows = conn.execute(
+            """
+            SELECT user_id, user_name, movie_name, is_priority
+            FROM   suggestions
+            WHERE  guild_id = ?
+            ORDER  BY user_id, is_priority DESC, movie_name COLLATE NOCASE
+            """,
+            (guild_id,),
+        ).fetchall()
+
+    if not rows:
+        await interaction.response.send_message(
+            "No suggestions yet! Use `/suggest` to add a movie.", ephemeral=True
+        )
+        return
+
+    seen: list[str] = []
+    users: dict[str, dict] = {}
+    for row in rows:
+        uid = row["user_id"]
+        if uid not in users:
+            users[uid] = {"name": row["user_name"], "movies": []}
+            seen.append(uid)
+        entry = (
+            f"⭐ **{row['movie_name']}**"
+            if row["is_priority"]
+            else f"• {row['movie_name']}"
+        )
+        users[uid]["movies"].append(entry)
+
+    embed = discord.Embed(title="🎬 Movie Suggestions", color=discord.Color.blue())
+    for uid in seen:
+        value = "\n".join(users[uid]["movies"])
+        if len(value) > 1024:
+            value = value[:1020] + "\n…"
+        embed.add_field(name=users[uid]["name"], value=value, inline=False)
+
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
 # ── UI components ─────────────────────────────────────────────────────────────
 
 class PrioView(discord.ui.View):
